@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>CYBER TIC TAC TOE</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&display=swap');
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    min-height: 100dvh;
+    background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+    color: #0ff;
+    font-family: 'Orbitron', sans-serif;
+    display: grid;
+    place-items: center;
+    overflow: auto;
+    padding: 1rem;
+    position: relative;
+  }
+
+  body::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><circle cx="50" cy="50" r="2" fill="%2366ffcc" opacity="0.35"/></svg>');
+    background-size: clamp(40px, 10vw, 70px);
+    animation: float 35s infinite linear;
+    z-index: -1;
+    opacity: 0.5;
+  }
+  @keyframes float {
+    0%   { transform: translate(0,0)   }
+    100% { transform: translate(60px,60px) }
+  }
+
+  .container {
+    width: 100%;
+    max-width: 95vmin;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(1rem, 4vw, 2.5rem);
+  }
+
+  .logo {
+    font-size: clamp(2.8rem, 12vw, 6.5rem);
+    font-weight: 900;
+    background: linear-gradient(90deg, #00ffea, #ff00c8, #00ffea);
+    background-size: 300%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: 0 0 25px #00ffeaaa;
+    animation: glow 4s ease-in-out infinite alternate, gradient 12s linear infinite;
+    letter-spacing: 0.08em;
+    text-align: center;
+  }
+
+  @keyframes glow {
+    from { text-shadow: 0 0 15px #00ffeaaa; }
+    to   { text-shadow: 0 0 45px #ff00c8aa, 0 0 70px #00ffea88; }
+  }
+  @keyframes gradient {
+    0%   { background-position: 0% 50%; }
+    100% { background-position: 300% 50%; }
+  }
+
+  .menu, .game {
+    display: none;
+    width: 100%;
+  }
+
+  .menu.active, .game.active {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(1.2rem, 5vw, 2rem);
+  }
+
+  .buttons {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(1rem, 4vw, 1.8rem);
+    width: 100%;
+    max-width: 420px;
+  }
+
+  button.big {
+    padding: clamp(0.9rem, 4vw, 1.4rem) 1.5rem;
+    font-size: clamp(1.1rem, 5vw, 1.5rem);
+    font-weight: 700;
+    background: rgba(0,255,234,0.08);
+    border: 2px solid #00ffea;
+    color: #0ff;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.35s;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+  }
+
+  button.big::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    left: -100%;
+    background: linear-gradient(90deg, transparent, rgba(0,255,234,0.35), transparent);
+    transition: left 0.7s;
+  }
+
+  button.big:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 0 35px #00ffeaaa;
+    border-color: #ff00c8;
+  }
+
+  button.big:hover::before {
+    left: 100%;
+  }
+
+  #status, #timer {
+    font-size: clamp(1.2rem, 5vw, 1.7rem);
+    text-align: center;
+    text-shadow: 0 0 12px currentColor;
+  }
+
+  #timer {
+    color: #ff3060;
+    font-weight: 700;
+  }
+
+  .board {
+    width: 100%;
+    max-width: 45vmin;
+    aspect-ratio: 1 / 1;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: clamp(8px, 2.5vw, 16px);
+    padding: clamp(10px, 3vw, 20px);
+    background: rgba(255,255,255,0.03);
+    border-radius: 16px;
+    border: 1px solid rgba(0,255,234,0.35);
+    backdrop-filter: blur(8px);
+    box-shadow: 0 0 35px rgba(0,255,234,0.2);
+  }
+
+  .cell {
+    background: rgba(255,255,255,0.06);
+    border-radius: 10px;
+    display: flex;
+    min-height: 0;
+    aspect-ratio: 1 / 1;
+    place-items: center;
+    font-size: clamp(2.5rem, 15vw, 6rem);
+    font-weight: 900;
+    cursor: pointer;
+    transition: all 0.25s;
+    border: 1.5px solid rgba(0,255,234,0.3);
+
+  align-items: center;
+  justify-content: center;
+
+  line-height: 1;              /* ← prevents extra vertical space */
+  padding: 0;
+  }
+
+  .cell:hover:not(.taken) {
+    background: rgba(0,255,234,0.15);
+    border-color: #00ffea;
+    box-shadow: 0 0 20px #00ffea77;
+  }
+
+  .cell.x { color: #ff3060; text-shadow: 0 0 18px #ff3060; }
+  .cell.o { color: #00aaff; text-shadow: 0 0 18px #00aaff; }
+
+  .cell.taken { cursor: not-allowed; }
+
+  .cell.win {
+    background: linear-gradient(135deg, #00ffea, #ff00c8) !important;
+    color: #000 !important;
+    text-shadow: none !important;
+    animation: pulse 1.3s infinite alternate;
+  }
+
+  @keyframes pulse {
+    to { transform: scale(1.06); }
+  }
+
+  .score {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: clamp(0.8rem, 3vw, 1.5rem);
+    font-size: clamp(1rem, 4vw, 1.3rem);
+  }
+
+  .score span {
+    background: rgba(0,255,234,0.09);
+    padding: 0.5em 1.2em;
+    border-radius: 10px;
+    border: 1px solid rgba(0,255,234,0.35);
+  }
+
+  .game-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: center;
+  }
+
+  .game-buttons button {
+    flex: 1 1 180px;
+    max-width: 260px;
+  }
+</style>
+</head>
+<body>
+
+<div class="container menu active" id="menu">
+  <h1 class="logo">TIC TAC TOE</h1>
+  <div class="buttons">
+    <button class="big" onclick="startGame('pvp')">1 VS 1</button>
+    <button class="big" onclick="startGame('ai')">VS ROBOT</button>
+    <button class="big" onclick="alert('Online multiplayer coming soon! 🚀\n(Needs server + real-time backend)')">PLAY ONLINE</button>
+  </div>
+</div>
+
+<div class="container game" id="game">
+  <h1 class="logo" style="font-size: clamp(2.4rem, 10vw, 5rem);">CYBER TAC</h1>
+
+  <div class="score">
+    <span>X: <span id="scoreX">0</span></span>
+    <span>O: <span id="scoreO">0</span></span>
+    <span>TIE: <span id="scoreT">0</span></span>
+  </div>
+
+  <div id="status">Select mode to start</div>
+  <div id="timer">Time: 10s</div>
+
+  <div class="board" id="board">
+    <div class="cell" data-i="0"></div>
+    <div class="cell" data-i="1"></div>
+    <div class="cell" data-i="2"></div>
+    <div class="cell" data-i="3"></div>
+    <div class="cell" data-i="4"></div>
+    <div class="cell" data-i="5"></div>
+    <div class="cell" data-i="6"></div>
+    <div class="cell" data-i="7"></div>
+    <div class="cell" data-i="8"></div>
+  </div>
+
+  <div class="game-buttons">
+    <button class="big" id="newGameBtn">NEW GAME</button>
+    <button class="big" onclick="backToMenu()">MENU</button>
+  </div>
+</div>
+
+<script>
+// ──────────────────────────────────────────────
+const boardEl = document.getElementById('board');
+const cells = [...boardEl.children];
+const statusEl = document.getElementById('status');
+const timerEl = document.getElementById('timer');
+const scoreX = document.getElementById('scoreX');
+const scoreO = document.getElementById('scoreO');
+const scoreT = document.getElementById('scoreT');
+const newGameBtn = document.getElementById('newGameBtn');
+
+let board = Array(9).fill(null);
+let currentPlayer = 'X';
+let gameMode = null;
+let gameActive = false;
+let timer;
+let timeLeft = 10;
+let scores = { X:0, O:0, T:0 };
+
+const winCombos = [
+  [0,1,2],[3,4,5],[6,7,8],
+  [0,3,6],[1,4,7],[2,5,8],
+  [0,4,8],[2,4,6]
+];
+
+function startGame(mode) {
+  gameMode = mode;
+  document.getElementById('menu').classList.remove('active');
+  document.getElementById('game').classList.add('active');
+  resetGame();
+}
+
+function backToMenu() {
+  document.getElementById('game').classList.remove('active');
+  document.getElementById('menu').classList.add('active');
+  clearInterval(timer);
+}
+
+function resetGame() {
+  board.fill(null);
+  currentPlayer = 'X';
+  gameActive = true;
+  cells.forEach(c => {
+    c.textContent = '';
+    c.classList.remove('x','o','taken','win');
+  });
+  statusEl.textContent = gameMode === 'ai' ? "You (X) start" : "X starts";
+  startTimer();
+  updateScores();
+}
+
+function startTimer() {
+  clearInterval(timer);
+  timeLeft = 10;
+  timerEl.textContent = `Time: ${timeLeft}s`;
+  timer = setInterval(() => {
+    timeLeft--;
+    timerEl.textContent = `Time: ${timeLeft}s`;
+    if (timeLeft <= 0) {
+      clearInterval(timer);
+      if (!gameActive) return;
+      const winner = currentPlayer === 'X' ? 'O' : 'X';
+      statusEl.textContent = `Time's up! ${winner} wins! ⏰`;
+      scores[winner]++;
+      updateScores();
+      gameActive = false;
+    }
+  }, 1000);
+}
+
+function updateScores() {
+  scoreX.textContent = scores.X;
+  scoreO.textContent = scores.O;
+  scoreT.textContent = scores.T;
+}
+
+function checkWin(player) {
+  return winCombos.some(combo => combo.every(i => board[i] === player));
+}
+
+function markWin(player) {
+  winCombos.forEach(combo => {
+    if (combo.every(i => board[i] === player)) {
+      combo.forEach(i => cells[i].classList.add('win'));
+    }
+  });
+}
+
+function handleClick(e) {
+  if (!gameActive) return;
+  const cell = e.target;
+  const i = +cell.dataset.i;
+  if (board[i] !== null) return;
+  if (gameMode === 'ai' && currentPlayer === 'O') return;
+
+  makeMove(i, currentPlayer);
+}
+
+function makeMove(i, player) {
+  board[i] = player;
+  cells[i].textContent = player;
+  cells[i].classList.add(player.toLowerCase(), 'taken');
+
+  clearInterval(timer);
+
+  if (checkWin(player)) {
+    statusEl.textContent = player === 'X' && gameMode === 'ai' ? "You win! 🎉" : `${player} wins! 🎉`;
+    markWin(player);
+    scores[player]++;
+    updateScores();
+    gameActive = false;
+    return;
+  }
+
+  if (board.every(v=>v!==null)) {
+    statusEl.textContent = "Draw! 🤝";
+    scores.T++;
+    updateScores();
+    gameActive = false;
+    return;
+  }
+
+  currentPlayer = player === 'X' ? 'O' : 'X';
+  statusEl.textContent = gameMode === 'ai' ? (currentPlayer==='X'?"Your turn":"Robot thinking...") : `${currentPlayer}'s turn`;
+
+  startTimer();
+
+  if (gameMode === 'ai' && currentPlayer === 'O' && gameActive) {
+    setTimeout(aiMove, 400);
+  }
+}
+
+function aiMove() {
+  if (!gameActive || currentPlayer !== 'O') return;
+
+  let bestScore = -Infinity;
+  let bestMove;
+
+  for (let i = 0; i < 9; i++) {
+    if (board[i] === null) {
+      board[i] = 'O';
+      let score = minimax(board, 0, false);
+      board[i] = null;
+      if (score > bestScore) {
+        bestScore = score;
+        bestMove = i;
+      }
+    }
+  }
+
+  makeMove(bestMove, 'O');
+}
+
+function minimax(board, depth, isMaximizing) {
+  if (checkWin('O')) return 10 - depth;
+  if (checkWin('X')) return depth - 10;
+  if (board.every(v=>v!==null)) return 0;
+
+  if (isMaximizing) {
+    let best = -Infinity;
+    for (let i = 0; i < 9; i++) {
+      if (board[i] === null) {
+        board[i] = 'O';
+        best = Math.max(best, minimax(board, depth+1, false));
+        board[i] = null;
+      }
+    }
+    return best;
+  } else {
+    let best = Infinity;
+    for (let i = 0; i < 9; i++) {
+      if (board[i] === null) {
+        board[i] = 'X';
+        best = Math.min(best, minimax(board, depth+1, true));
+        board[i] = null;
+      }
+    }
+    return best;
+  }
+}
+
+// Event listeners
+cells.forEach(cell => cell.addEventListener('click', handleClick));
+newGameBtn.addEventListener('click', resetGame);
+
+// Start
+updateScores();
+</script>
+</body>
+</html>
